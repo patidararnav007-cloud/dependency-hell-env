@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "dependency-hell-env"
+version = "1.0.0"
+description = "OpenEnv RL environment for resolving Python dependency conflicts"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi==0.111.0",
+    "uvicorn==0.29.0",
+    "pydantic==2.7.0",
+    "openenv-core>=0.2.1",
+    "openai>=1.0.0",
+]

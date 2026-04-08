@@ -1,0 +1,90 @@
+name: dependency-hell-env
+version: 1.0.0
+description: >
+  An RL environment where an agent must resolve real-world Python dependency
+  conflicts by pinning, removing, or adding packages until the environment
+  installs cleanly. Models a genuine pain point every software engineer faces.
+
+author: your-huggingface-username
+license: MIT
+tags:
+  - openenv
+  - dependency-resolution
+  - software-engineering
+  - real-world
+  - deterministic
+
+environment:
+  entry_point: app:app
+  host: 0.0.0.0
+  port: 8000
+
+api:
+  reset: POST /reset
+  step: POST /step
+  state: GET /state
+
+observation_space:
+  type: object
+  fields:
+    requirements:
+      type: array
+      description: Current list of package requirement strings
+    install_errors:
+      type: array
+      description: Error messages from the last install attempt
+    successful_imports:
+      type: integer
+      description: Number of packages that imported successfully
+    total_packages:
+      type: integer
+      description: Total packages currently in requirements
+    message:
+      type: string
+      description: Human readable status of the last action
+
+action_space:
+  type: object
+  fields:
+    action_type:
+      type: string
+      enum: [pin_version, remove_package, add_package, run_install]
+    package:
+      type: string
+      required: false
+    version:
+      type: string
+      required: false
+
+reward:
+  range: [0.0, 1.0]
+  description: >
+    Ratio of successfully imported packages to total packages after run_install.
+    Partial progress is rewarded throughout the episode, not just at completion.
+    A perfect score of 1.0 ends the episode immediately.
+
+tasks:
+  - id: easy_01
+    difficulty: easy
+    max_steps: 10
+    description: Fix a numpy/tensorflow version conflict
+
+  - id: easy_02
+    difficulty: easy
+    max_steps: 10
+    description: Pin an unpinned dependency causing install failure
+
+  - id: medium_01
+    difficulty: medium
+    max_steps: 20
+    description: Resolve a three-way diamond dependency conflict
+
+  - id: medium_02
+    difficulty: medium
+    max_steps: 20
+    description: Fix a broken data pipeline environment
+
+  - id: hard_01
+    difficulty: hard
+    max_steps: 35
+    description: Untangle an 8-package ML environment with cascading conflicts
