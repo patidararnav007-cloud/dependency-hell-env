@@ -14,3 +14,9 @@ dependencies = [
     "openenv-core>=0.2.1",
     "openai>=1.0.0",
 ]
+
+[project.scripts]
+server = "app:app"
+
+[tool.setuptools.packages.find]
+where = ["."]
