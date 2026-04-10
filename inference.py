@@ -1,5 +1,16 @@
+import subprocess
+import sys
+
+def install(package):
+    subprocess.check_call([sys.executable, "-m", "pip", "install", package, "-q"])
+
+try:
+    from openai import OpenAI
+except ImportError:
+    install("openai>=1.0.0")
+    from openai import OpenAI
+
 import os
-from openai import OpenAI
 from environment import DependencyHellEnvironment
 from scenarios import get_all_scenarios
 from models import Action, ActionType
@@ -73,10 +84,9 @@ def run_task(task_id: str, difficulty: str) -> float:
             final_reward = reward
 
         step_num += 1
-        error = "null"
         done_str = str(done).lower()
 
-        print(f"[STEP] step={step_num} action={action.action_type} reward={reward:.2f} done={done_str} error={error}", flush=True)
+        print(f"[STEP] step={step_num} action={action.action_type} reward={reward:.2f} done={done_str} error=null", flush=True)
 
         if done:
             break
