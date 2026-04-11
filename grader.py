@@ -46,9 +46,7 @@ def count_successful_imports(sandbox_dir: str, requirements: list[str]) -> int:
     count = 0
 
     for req in requirements:
-        # Extract just the package name, strip version specifiers
         pkg_name = req.split("==")[0].split(">=")[0].split("<=")[0].strip()
-        # Handle packages whose import name differs from pip name
         import_name = normalize_import_name(pkg_name)
 
         result = subprocess.run(
@@ -64,7 +62,6 @@ def count_successful_imports(sandbox_dir: str, requirements: list[str]) -> int:
 
 
 def normalize_import_name(pkg_name: str) -> str:
-    # Some packages have different pip names vs import names
     mapping = {
         "scikit-learn": "sklearn",
         "opencv-python": "cv2",
@@ -91,10 +88,11 @@ def score_requirements(requirements: list[str]) -> tuple[float, list[str], int]:
 
         successful = count_successful_imports(sandbox_dir, requirements)
         total = len(requirements)
-        score = round(successful / total, 4) if total > 0 else 0.0
+
+        raw = round(successful / total, 4) if total > 0 else 0.01
+        score = max(0.01, min(0.99, raw))
 
         return score, errors, successful
 
     finally:
-        # Always clean up the sandbox even if something crashes above
         cleanup_sandbox(sandbox_dir)

@@ -15,13 +15,11 @@ class DependencyHellEnvironment:
         self.done: bool = False
 
     def reset(self, task_id: str = None) -> Observation:
-        # Pick a random scenario if none specified
         if task_id is None:
             self.current_scenario = random.choice(get_all_scenarios())
         else:
             self.current_scenario = get_scenario(task_id)
 
-        # Deep copy the broken requirements so we don't mutate the original
         self.requirements = list(self.current_scenario.broken_requirements)
         self.install_errors = []
         self.successful_imports = 0
@@ -32,11 +30,11 @@ class DependencyHellEnvironment:
 
     def step(self, action: Action) -> tuple[Observation, float, bool, dict]:
         if self.done:
-            obs = self._build_observation("Episode is already finished. Call reset() to start again.")
-            return obs, 0.0, True, {}
+            obs = self._build_observation("Episode already finished. Call reset() to start again.")
+            return obs, 0.01, True, {}
 
         self.steps_taken += 1
-        reward = 0.0
+        reward = 0.01
         message = ""
 
         if action.action_type == ActionType.pin_version:
@@ -51,7 +49,6 @@ class DependencyHellEnvironment:
         elif action.action_type == ActionType.run_install:
             reward, message = self._handle_run_install()
 
-        # Check if max steps reached
         if self.steps_taken >= self.current_scenario.max_steps:
             self.done = True
             message += " Max steps reached. Episode ending."
@@ -77,15 +74,10 @@ class DependencyHellEnvironment:
             difficulty=self.current_scenario.difficulty if self.current_scenario else "",
         )
 
-    # ------------------------------------------------------------------ #
-    #  Private helpers                                                     #
-    # ------------------------------------------------------------------ #
-
     def _handle_pin(self, action: Action) -> str:
         if not action.package or not action.version:
             return "pin_version requires both package and version fields."
 
-        # Replace existing entry for this package, or add if not present
         updated = False
         for i, req in enumerate(self.requirements):
             pkg_name = req.split("==")[0].split(">=")[0].split("<=")[0].strip()
@@ -129,12 +121,10 @@ class DependencyHellEnvironment:
         self.successful_imports = successful
         total = len(self.requirements)
 
-        # Perfect score ends the episode as a win
-        if score == 1.0:
+        if score >= 0.99:
             self.done = True
-            return 1.0, f"Perfect install! All {total}/{total} packages work. Episode complete."
+            return 0.99, f"Perfect install! All {total}/{total} packages work. Episode complete."
 
-        # Partial reward proportional to how many packages work
         message = f"{successful}/{total} packages installed successfully."
         if errors:
             message += f" Errors: {errors[0]}"
