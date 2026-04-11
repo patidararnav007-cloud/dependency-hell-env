@@ -51,6 +51,10 @@ TASKS = [
 ]
 
 
+def clamp(score: float) -> float:
+    return max(0.01, min(0.99, float(score)))
+
+
 def reset_env(task_id: str) -> dict:
     resp = requests.post(
         f"{ENV_URL}/reset",
@@ -96,13 +100,13 @@ def run_task(task_id: str, difficulty: str) -> float:
     try:
         obs = reset_env(task_id)
     except Exception as e:
-        print(f"[STEP] step=1 action=reset reward=0.00 done=true error={e}", flush=True)
-        print(f"[END] success=false steps=1 score=0.00 rewards=0.00", flush=True)
-        return 0.0
+        print(f"[STEP] step=1 action=reset reward=0.01 done=true error={e}", flush=True)
+        print(f"[END] success=false steps=1 score=0.01 rewards=0.01", flush=True)
+        return 0.01
 
     history = []
     rewards = []
-    final_reward = 0.0
+    final_reward = 0.01
     step_num = 0
     max_steps = 8
 
@@ -122,14 +126,14 @@ def run_task(task_id: str, difficulty: str) -> float:
         try:
             result = step_env(action_dict)
             obs = result.get("observation", obs)
-            reward = float(result.get("reward", 0.0))
+            reward = clamp(result.get("reward", 0.01))
             done = result.get("done", False)
-        except Exception as e:
-            reward = 0.0
+        except Exception:
+            reward = 0.01
             done = True
 
         rewards.append(reward)
-        if reward > 0:
+        if reward > 0.01:
             final_reward = reward
 
         step_num += 1
@@ -143,8 +147,10 @@ def run_task(task_id: str, difficulty: str) -> float:
 
         time.sleep(0.5)
 
+    final_reward = clamp(final_reward)
     rewards_str = ",".join(f"{r:.2f}" for r in rewards)
     success = str(final_reward >= 0.5).lower()
+
     print(f"[END] success={success} steps={step_num} score={final_reward:.2f} rewards={rewards_str}", flush=True)
 
     return final_reward
@@ -156,8 +162,8 @@ def main():
             run_task(task["task_id"], task["difficulty"])
         except Exception as e:
             print(f"[START] task={task['task_id']} env=dependency-hell-env model={MODEL_NAME}", flush=True)
-            print(f"[STEP] step=1 action=error reward=0.00 done=true error={e}", flush=True)
-            print(f"[END] success=false steps=1 score=0.00 rewards=0.00", flush=True)
+            print(f"[STEP] step=1 action=error reward=0.01 done=true error={e}", flush=True)
+            print(f"[END] success=false steps=1 score=0.01 rewards=0.01", flush=True)
 
 
 if __name__ == "__main__":
